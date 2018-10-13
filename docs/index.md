@@ -11,59 +11,28 @@ layout: default
 * * * * * *
 #### Problem setup and solution methodology
 
-In [this work](https://arxiv.org/abs/1804.07010), we consider coupled forward-backward stochastic differential equations of the general form
+We begin by considering the prototype [Vortex induced vibrations](https://en.wikipedia.org/wiki/Vortex-induced_vibration) VIV problem of flow past a circular cylinder. The fluid motion is governed by the incompressible Navier-Stokes equations while the dynamics of the structure is described in a general form involving displacement, velocity, and acceleration terms. In particular, let us consider the two-dimensional version of flow over a flexible cable, i.e., an elastically mounted cylinder. The two-dimensional problem contains most of the salient features of the three-dimensional case and consequently it is relatively straightforward to generalize the proposed framework to the flexible cylinder/cable problem. In two dimensions, the physical model of the cable reduces to a mass-spring-damper system. There are two directions of motion for the cylinder: the streamwise (i.e., $$x$$) direction and the crossflow (i.e., $$y$$) direction. In [this work](https://arxiv.org/abs/1808.08952), we assume that the cylinder can only move in the crossflow (i.e., $$y$$) direction; we concentrate on crossflow vibrations since this is the primary VIV direction. However, it is a simple extension to study cases where the cylinder is free to move in both streamwise and crossflow directions.
+
+**A Pedagogical Example**
+
+The cylinder displacement is defined by the variable $$\eta$$ corresponding to the crossflow motion. The equation of motion for the cylinder is then given by
+
+$$
+\rho \eta_{tt} + b \eta_t + k \eta = f_L,
+$$
+
+where $$\rho$$, $$b$$, and $$k$$ are the mass, damping, and stiffness parameters, respectively. The fluid lift force on the structure is denoted by $$f_L$$. The mass $$\rho$$ of the cylinder is usually a known quantity; however, the damping $$b$$ and the stiffness $$k$$ parameters are often unknown in practice. In the current work, we put forth a deep learning approach for estimating these parameters from measurements. We start by assuming that we have access to the input-output data $$\{t^n, \eta^n\}_{n=1}^N$$ and $$\{t^n, f_L^n\}_{n=1}^N$$ on the displacement $$\eta(t)$$ and the lift force $$f_L(t)$$ functions, respectively. Having access to direct measurements of the forces exerted by the fluid on the structure is obviously a strong assumption. However, we start with this simpler but pedagogical case and we will relax this assumption later in this section.
+
+
+Inspired by recent developments in [physics informed deep learning](https://maziarraissi.github.io/PINNs/) and [deep hidden physics models](https://maziarraissi.github.io/DeepHPMs/), we propose to approximate the unknown function $$\eta$$ by a deep neural network. This choice is motivated by modern techniques for solving forward and inverse problems involving partial differential equations, where the unknown solution is approximated either by a neural network or a [Gaussian process](https://maziarraissi.github.io/HPM/). Moreover, placing a prior on the solution is fully justified by similar approaches pursued in the past centuries by classical methods of solving partial differential equations such as finite elements, finite differences, or spectral methods, where one would expand the unknown solution in terms of an appropriate set of basis functions. Approximating the unknown function $$\eta$$ by a deep neural network and using the above equation allow us to obtain the following [physics-informed neural network](https://maziarraissi.github.io/PINNs/) (see the following figure)
+
 
 $$
 \begin{array}{l}
-dX_t = \mu(t, X_t, Y_t, Z_t)dt + \sigma(t, X_t, Y_t)dW_t, ~~~ t \in [0,T],\\
-X_0 = \xi,\\
-dY_t = \varphi(t, X_t, Y_t, Z_t)dt + Z_t'\sigma(t,X_t,Y_t)dW_t, ~~~ t \in [0,T),\\
-Y_T = g(X_T),
+f_L := \rho \eta_{tt} + b \eta_t + k \eta.
 \end{array}
 $$
 
-where $$W_t$$ is a vector-valued Brownian motion. A solution to these equations consists of the stochastic processes $$X_t$$, $$Y_t$$, and $$Z_t$$. It is [well-known](https://onlinelibrary.wiley.com/doi/abs/10.1002/cpa.20168) that coupled forward-backward stochastic differential equations are related to quasi-linear partial differential equations of the form
-
-$$
-u_t = f(t,x,u,Du,D^2u),
-$$
-
-with terminal condition $$u(T,x) = g(x)$$, where $$u(t,x)$$ is the unknown solution and
-
-$$
-f(t,x,y,z,\gamma) = \varphi(t,x,y,z) - \mu(t,x,y,z)'z - \frac{1}{2}\text{Tr}[\sigma(t,x,y)\sigma(t,x,y)'\gamma].
-$$
-
-Here, $$Du$$ and $$D^2u$$ denote the gradient vector and the Hessian matrix of $$u$$, respectively. In particular, it follows directly from [Ito's formula](https://en.wikipedia.org/wiki/Itô%27s_lemma) that solutions of forward-backward stochastic differential equations and quasi-linear partial differential equations are related according to
-
-$$
-Y_t = u(t, X_t), ~ \text{and} ~ Z_t = D u(t, X_t).
-$$
-
-Inspired by recent developments in [physics-informed deep learning](https://maziarraissi.github.io/PINNs/) and [deep hidden physics models](https://maziarraissi.github.io/DeepHPMs/), we proceed by approximating the unknown solution $$u(t,x)$$ by a deep neural network. We obtain the required gradient vector $$Du(t,x)$$ by applying the chain rule for differentiating compositions of functions using automatic differentiation. In particular, to compute the derivatives we rely on [Tensorflow](https://www.tensorflow.org) which is a popular and relatively well documented open source software library for automatic differentiation and deep learning computations.
-
-Parameters of the neural network representing $$u(t,x)$$ can be learned by minimizing the following loss function obtained from discretizing the forward-backward stochastic differential equation using the standard [Euler-Maruyama scheme](https://en.wikipedia.org/wiki/Euler–Maruyama_method). To be more specific, let us employ the Euler-Maruyama scheme and obtain
-
-$$
-\begin{array}{l}
-X^{n+1} \approx X^n + \mu(t^n,X^n,Y^n,Z^n)\Delta t^n + \sigma(t^n,X^n,Y^n)\Delta W^n,\\
-Y^{n+1} \approx Y^n + \varphi(t^n,X^n,Y^n,Z^n)\Delta t^n + (Z^n)'\sigma(t^n,X^n,Y^n)\Delta W^n,
-\end{array}
-$$
-
-for $$n = 0, 1, \ldots, N-1$$, where $$\Delta t^n := t^{n+1} - t^n = T/N$$ and $$\Delta W^n \sim \mathcal{N}(0, \Delta t^n)$$ is a random variable with mean $$0$$ and standard deviation $$\sqrt{\Delta t^n}$$. The loss function is then given by
-
-$$
-\sum_{m=1}^M \sum_{n=0}^{N-1} |Y^{n+1}_m - Y^n_m - \Phi^n_m \Delta t^n - (Z^n_m)' \Sigma^n_m \Delta W_m^n|^2 + \sum_{m=1}^M |Y^N_m - g(X^N_m)|^2,
-$$
-
-which corresponds to $$M$$ different realizations of the underlying Brownian motion. Here, $$\Phi^n_m := \varphi(t^n,X^n_m,Y^n_m,Z^n_m)$$ and $$\Sigma^n_m := \sigma(t^n,X^n_m,Y^n_m)$$. The subscript $$m$$ corresponds to the $$m$$-th realization of the underlying Brownian motion while the superscript $$n$$ corresponds to time $$t^n$$. It is worth recalling that $$Y_m^n = u(t^n, X_m^n)$$ and $$Z_m^n = D u(t^n, X_m^n)$$, and consequently the loss is a function of the parameters of the neural network $$u(t,x)$$. Furthermore, we have
-
-$$
-X^{n+1}_m = X^n_m + \mu(t^n,X^n_m,Y^n_m,Z^n_m)\Delta t^n + \sigma(t^n_m,X^n_m,Y^n_m)\Delta W^n_m,
-$$
-
-and $$X^0_m = \xi$$ for every $$m$$.
 
 * * * * * *
 #### Results
