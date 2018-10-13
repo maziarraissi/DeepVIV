@@ -62,7 +62,8 @@ Here, $$u(t,x,y)$$ and $$v(t,x,y)$$ are the streamwise and crossflow components 
 
 **Problem 1 (VIV-I):** Given scattered and potentially noisy measurements $$\{t^n, x^n, y^n, u^n, v^n\}_{n=1}^N$$ of the velocity field -- Take for example the case of reconstructing a flow field from scattered measurements obtained from [Particle Image Velocimetry](https://en.wikipedia.org/wiki/Particle_image_velocimetry) (PIV) or [Particle Tracking Velocimetry](https://en.wikipedia.org/wiki/Particle_tracking_velocimetry) (PTV) -- in addition to the data $$\{t^n,\eta^n\}_{n=1}^{N}$$ on the displacement and knowing the governing equations of the flow, we are interested in reconstructing the entire velocity field as well as the pressure field in space-time. Such measurements are usually collected only in a small sub-domain, which may not be appropriate for classical CFD computations due to the presence of numerical artifacts. Typically, the data points are scattered in both space and time and are usually of the order of a few thousands or less in space. For a visual representation of the distribution of observation points $$\{t^n, x^n, y^n\}_{n=1}^N$$ scattered in space and time please refer to the following figure.
 
-
+![](http://www.dam.brown.edu/people/mraissi/assets/img/PointCloud.png)
+> _Point-cloud:_ Depicted on the left panel is a visual representation of the distribution of observation points scattered in space and time. A randomly selected snapshot of the distribution of data points is also shown in the right panel. To capture the boundary layers a finer resolution of points are sampled closer to the cylinder.
 
 
 * * * * * *
