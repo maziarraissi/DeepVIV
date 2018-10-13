@@ -65,6 +65,16 @@ Here, $$u(t,x,y)$$ and $$v(t,x,y)$$ are the streamwise and crossflow components 
 ![](http://www.dam.brown.edu/people/mraissi/assets/img/PointCloud.png)
 > _Point-cloud:_ Depicted on the left panel is a visual representation of the distribution of observation points scattered in space and time. A randomly selected snapshot of the distribution of data points is also shown in the right panel. To capture the boundary layers a finer resolution of points are sampled closer to the cylinder.
 
+To solve the aforementioned problem, we proceed by approximating the latent functions $$u(t,x,y)$$, $$v(t,x,y)$$, $$p(t,x,y)$$, and $$\eta(t)$$ by a single neural network outputting four variables while taking as input $$t, x$$, and $$y$$. This prior assumption along with the incompressible Navier-Stokes equations result in the following Navier-Stokes informed neural networks (see the following figure)
+
+$$
+\begin{array}{l}
+e_1 := u_t + u u_x + v u_y + p_x - Re^{-1}(u_{xx} + u_{yy}),\\
+e_2 := v_t + u v_x + v v_y + p_y - Re^{-1}(v_{xx} + v_{yy}) + \eta_{tt},\\
+e_3 := u_x + v_y.
+\end{array}
+$$
+
 
 * * * * * *
 #### Results
