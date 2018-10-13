@@ -1,0 +1,9 @@
+__pycache__/
+
+Data/
+
+Results/
+
+Figures/
+
+*.tar.gz
