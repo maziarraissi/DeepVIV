@@ -33,7 +33,7 @@ f_L := \rho \eta_{tt} + b \eta_t + k \eta.
 \end{array}
 $$
 
-![](http://www.dam.brown.edu/people/mraissi/assets/img/img/DeepVIV_1.png)
+![](http://www.dam.brown.edu/people/mraissi/assets/img/DeepVIV_1.png)
 > _Pedagogical physics-informed neural network:_ A plain vanilla densely connected (physics uninformed) neural network, with 10 hidden layers and 32 neurons per hidden layer per output variable (i.e., 1 x 32 = 32 neurons per hidden layer), takes the input variable t and outputs the displacement. As for the activation functions, we use sin(x). For illustration purposes only, the network depicted in this figure comprises of 2 hidden layers and 4 neurons per hidden layers. We employ automatic differentiation to obtain the required derivatives to compute the residual (physics informed) networks. The total loss function is composed of the regression loss of the displacement on the training data, and the loss imposed by the differential equation. Here, the differential operator is computed using automatic differentiation and can be thought of as an ``activation operator". Moreover, the gradients of the loss function are back-propagated through the entire network to train the parameters of the neural network as well as the damping and the stiffness parameters using the Adam optimizer.
 
 
