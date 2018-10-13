@@ -78,6 +78,49 @@ $$
 ![](http://www.dam.brown.edu/people/mraissi/assets/img/DeepVIV_2.png)
 > _Navier-Stokes informed neural networks:_ A plain vanilla densely connected (physics uninformed) neural network, with 10 hidden layers and 32 neurons per hidden layer per output variable (i.e., 4 x 32 = 128 neurons per hidden layer), takes the input variables t, x, y and outputs the dispacement, u, v, and p. As for the activation functions, we use sin(x). For illustration purposes only, the network depicted in this figure comprises of 2 hidden layers and 5 neurons per hidden layers. We employ automatic differentiation to obtain the required derivatives to compute the residual (physics informed) networks. If a term does not appear in the blue boxes, its coefficient is assumed to be zero. It is worth emphasizing that unless the coefficient in front of a term is non-zero, that term is not going to appear in the actual "compiled" computational graph and is not going to contribute to the computational cost of a feed forward evaluation of the resulting network. The total loss function is composed of the regression loss of the velocity fields u, v and the displacement on the training data, and the loss imposed by the differential equations. Here, the differential operators are computed using automatic differentiation and can be thought of as "activation operators". Moreover, the gradients of the loss function are back-propagated through the entire network to train the neural network parameters using the Adam optimizer.
 
+We use automatic differentiation to obtain the required derivatives to compute the residual networks $$e_1$$, $$e_2$$, and $$e_3$$. The shared parameters of the neural networks $$u$$, $$v$$, $$p$$, $$\eta$$, $$e_1$$, $$e_2$$, and $$e_3$$ can be learned by minimizing the sum of squared errors loss function
+
+$$
+\begin{array}{l}
+\sum_{n=1}^N \left( \vert u(t^n,x^n,y^n)-u^n \vert^2 + \vert v(t^n,x^n,y^n)-v^n \vert^2 \right)\\
++ \sum_{n=1}^N \vert \eta(t^n)-\eta^n \vert^2 + \sum_{i=1}^3\sum_{n=1}^N \left( \vert e_i(t^n,x^n,y^n) \vert^2 \right).
+\end{array}
+$$
+
+Here, the first two summations correspond to the training data on the fluid velocity and the structure displacement while the last summation enforces the dynamics imposed by the incompresible Navier-Stokes equations.
+
+The fluid forces on the cylinder are functions of the pressure and the velocity gradients. Consequently, having trained the neural networks, we can use
+
+$$
+F_D = \oint \left[-p n_x + 2 Re^{-1} u_x n_x + Re^{-1} \left(u_y + v_x\right)n_y\right]ds,
+$$
+
+$$
+F_L = \oint \left[-p n_y + 2 Re^{-1} v_y n_y + Re^{-1} \left(u_y + v_x\right)n_x\right]ds,
+$$
+
+to obtain the lift and drag forces exerted by the fluid on the cylinder. Here, $$(n_x,n_y)$$ is the outward normal on the cylinder and $$ds$$ is the arc length on the surface of the cylinder. We use the trapezoidal rule to approximately compute these integrals, and we use the above equations to obtain the required data on the lift force. These data are then used to estimate the structural parameters $$b$$ and $$k$$ by minimizing the first loss function introduced in this document.
+
+**Inferring Lift and Drag Forces from Flow Visualizations**
+
+We now consider the second VIV learning problem by taking one step further and circumvent the need for having access to measurements of the velocity field by leveraging the following equation
+
+$$
+c_t + u c_x + v c_y = Pe^{-1} (c_{xx} + c_{yy}),
+$$
+
+governing the evolution of the concentration $$c(t,x,y)$$ of a passive scalar injected into the fluid flow dynamics described by the incompressible Navier-Stokes equations. Here, $$Pe$$ denotes the [Péclet number](https://en.wikipedia.org/wiki/Péclet_number), defined based on the cylinder diameter, the free-stream velocity and the diffusivity of the concentration species.
+
+
+**Problem 2 (VIV-II):** Given scattered and potentially noisy measurements $$\{t^n,x^n,y^n,c^n\}_{n=1}^N$$ of the concentration $$c(t,x,y)$$ of the passive scalar in space-time, we are interested in inferring the latent (hidden) quantities $$u(t,x,y)$$, $$v(t,x,y)$$, and $$p(t,x,y)$$ while leveraging the governing equations of the flow as well as the transport equation describing the evolution of the passive scalar. Typically, the data points are of the order of a few thousands or less in space. Moreover, the equations for lift and drag enable us to consequently compute the drag and lift forces, respectively, as functions of the inferred pressure and velocity gradients. Unlike the first VIV problem, here we assume that we do not have access to direct observations of the velocity field.
+
+To solve the second VIV problem, in addition to approximating $$u(t,x,y)$$, $$v(t,x,y)$$, $$p(t,x,y)$$, and $$\eta(t)$$ by deep neural networks as before, we represent $$c(t,x,y)$$ by yet another output of the network taking $$t, x,$$ and $$y$$ as inputs. This prior assumption along with the scalar transport equation result in the following additional component of the Navier-Stokes informed neural network (see the following figure)
+
+$$
+\begin{array}{l}
+e_4 := c_t + u c_x + v c_y - Pe^{-1}(c_{xx} + c_{yy}).
+\end{array}
+$$
 
 
 
