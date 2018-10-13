@@ -34,7 +34,34 @@ f_L := \rho \eta_{tt} + b \eta_t + k \eta.
 $$
 
 ![](http://www.dam.brown.edu/people/mraissi/assets/img/DeepVIV_1.png)
-> _Pedagogical physics-informed neural network:_ A plain vanilla densely connected (physics uninformed) neural network, with 10 hidden layers and 32 neurons per hidden layer per output variable (i.e., 1 x 32 = 32 neurons per hidden layer), takes the input variable t and outputs the displacement. As for the activation functions, we use sin(x). For illustration purposes only, the network depicted in this figure comprises of 2 hidden layers and 4 neurons per hidden layers. We employ automatic differentiation to obtain the required derivatives to compute the residual (physics informed) networks. The total loss function is composed of the regression loss of the displacement on the training data, and the loss imposed by the differential equation. Here, the differential operator is computed using automatic differentiation and can be thought of as an ``activation operator". Moreover, the gradients of the loss function are back-propagated through the entire network to train the parameters of the neural network as well as the damping and the stiffness parameters using the Adam optimizer.
+> _Pedagogical physics-informed neural network:_ A plain vanilla densely connected (physics uninformed) neural network, with 10 hidden layers and 32 neurons per hidden layer per output variable (i.e., 1 x 32 = 32 neurons per hidden layer), takes the input variable t and outputs the displacement. As for the activation functions, we use sin(x). For illustration purposes only, the network depicted in this figure comprises of 2 hidden layers and 4 neurons per hidden layers. We employ automatic differentiation to obtain the required derivatives to compute the residual (physics informed) networks. The total loss function is composed of the regression loss of the displacement on the training data, and the loss imposed by the differential equation. Here, the differential operator is computed using automatic differentiation and can be thought of as an "activation operator". Moreover, the gradients of the loss function are back-propagated through the entire network to train the parameters of the neural network as well as the damping and the stiffness parameters using the Adam optimizer.
+
+It is worth noting that the damping $$b$$ and the stiffness $$k$$ parameters turn into parameters of the resulting physics informed neural network $$f_L$$. We obtain the required derivatives to compute the residual network $$f_L$$ by applying the chain rule for differentiating compositions of functions using [automatic differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation). Automatic differentiation is different from, and in several respects superior to, numerical or symbolic differentiation -- two commonly encountered techniques of computing derivatives. In its most basic description, automatic differentiation relies on the fact that all numerical computations are ultimately compositions of a finite set of elementary operations for which derivatives are known. Combining the derivatives of the constituent operations through the chain rule gives the derivative of the overall composition. This allows accurate evaluation of derivatives at machine precision with ideal asymptotic efficiency and only a small constant factor of overhead. In particular, to compute the required derivatives we rely on [Tensorflow](https://www.tensorflow.org), which is a popular and relatively well documented open source software library for automatic differentiation and deep learning computations.
+
+The shared parameters of the neural networks $$\eta$$ and $$f_L$$, in addition to the damping $$b$$ and the stiffness $$k$$ parameters, can be learned by minimizing the following sum of squared errors loss function
+
+$$
+\sum_{n=1}^N |\eta(t^n) - \eta^n|^2 + \sum_{n=1}^N |f_L(t^n) - f_L^n|^2.
+$$
+
+The first summation in this loss function corresponds to the training data on the displacement $$\eta(t)$$ while the second summation enforces the dynamics imposed by equation of motion for the cylinder.
+
+**Inferring Lift and Drag Forces from Scattered Velocity Measurements**
+
+So far, we have been operating under the assumption that we have access to direct measurements of the lift force $$f_L$$. In the following, we are going to relax this assumption by recalling that the fluid motion is governed by the incompressible [Navier-Stokes equations](https://en.wikipedia.org/wiki/Navier–Stokes_existence_and_smoothness) given explicitly by
+
+$$
+\begin{array}{l}
+u_t + u u_x + v u_y = - p_x + Re^{-1}(u_{xx} + u_{yy}),\\
+v_t + u v_x + v v_y = - p_y + Re^{-1}(v_{xx} + v_{yy}) - \eta_{tt},\\
+u_x + v_y = 0.
+\end{array}
+$$
+
+Here, $$u(t,x,y)$$ and $$v(t,x,y)$$ are the streamwise and crossflow components of the velocity field, respectively, while $$p(t,x,y)$$ denotes the pressure, and $$Re$$ is the [Reynolds number](https://en.wikipedia.org/wiki/Reynolds_number) based on the cylinder diameter and the free stream velocity. We consider the incompressible Navier-Stokes equations in the coordinate system attached to the cylinder, so that the cylinder appears stationary in time. This explains the appearance of the extra term $$\eta_{tt}$$ in the second momentum equation.
+
+**Problem 1 (VIV-I):** Given scattered and potentially noisy measurements $$\{t^n, x^n, y^n, u^n, v^n\}_{n=1}^N$$ of the velocity field -- Take for example the case of reconstructing a flow field from scattered measurements obtained from [Particle Image Velocimetry](https://en.wikipedia.org/wiki/Particle_image_velocimetry) (PIV) or [Particle Tracking Velocimetry](https://en.wikipedia.org/wiki/Particle_tracking_velocimetry) (PTV) -- in addition to the data $$\{t^n,\eta^n\}_{n=1}^{N}$$ on the displacement and knowing the governing equations of the flow, we are interested in reconstructing the entire velocity field as well as the pressure field in space-time. Such measurements are usually collected only in a small sub-domain, which may not be appropriate for classical CFD computations due to the presence of numerical artifacts. Typically, the data points are scattered in both space and time and are usually of the order of a few thousands or less in space. For a visual representation of the distribution of observation points $$\{t^n, x^n, y^n\}_{n=1}^N$$ scattered in space and time please refer to the following figure.
+
 
 
 
