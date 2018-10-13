@@ -111,7 +111,6 @@ $$
 
 governing the evolution of the concentration $$c(t,x,y)$$ of a passive scalar injected into the fluid flow dynamics described by the incompressible Navier-Stokes equations. Here, $$Pe$$ denotes the [Péclet number](https://en.wikipedia.org/wiki/Péclet_number), defined based on the cylinder diameter, the free-stream velocity and the diffusivity of the concentration species.
 
-
 **Problem 2 (VIV-II):** Given scattered and potentially noisy measurements $$\{t^n,x^n,y^n,c^n\}_{n=1}^N$$ of the concentration $$c(t,x,y)$$ of the passive scalar in space-time, we are interested in inferring the latent (hidden) quantities $$u(t,x,y)$$, $$v(t,x,y)$$, and $$p(t,x,y)$$ while leveraging the governing equations of the flow as well as the transport equation describing the evolution of the passive scalar. Typically, the data points are of the order of a few thousands or less in space. Moreover, the equations for lift and drag enable us to consequently compute the drag and lift forces, respectively, as functions of the inferred pressure and velocity gradients. Unlike the first VIV problem, here we assume that we do not have access to direct observations of the velocity field.
 
 To solve the second VIV problem, in addition to approximating $$u(t,x,y)$$, $$v(t,x,y)$$, $$p(t,x,y)$$, and $$\eta(t)$$ by deep neural networks as before, we represent $$c(t,x,y)$$ by yet another output of the network taking $$t, x,$$ and $$y$$ as inputs. This prior assumption along with the scalar transport equation result in the following additional component of the Navier-Stokes informed neural network (see the following figure)
@@ -145,6 +144,11 @@ To generate a high-resolution dataset for the VIV problem we have performed dire
 **A Pedagogical Example**
 
 To illustrate the effectiveness of our approach, let us start with the two time series depicted in the following figure consisting of $$N=111$$ observations of the displacement and the lift force. These data correspond to damping and stiffness parameters with exact values $$b=0.084$$ and $$k=2.2020$$, respectively. Here, the cylinder is assumed to have a mass of $$\rho = 2.0$$. This data-set is then used to train a 10-layer deep neural network with 32 neurons per hidden layers by minimizing the sum of squared errors loss function (the first loss function introduced in the current work) using the [Adam optimizer](https://arxiv.org/abs/1412.6980). Upon training, the network is used to predict the entire solution functions $$\eta(t)$$ and $$f_L(t)$$, as well as the unknown structural parameters $$b$$ and $$k$$. In addition to almost perfect reconstructions of the two time series for displacement and lift force, the proposed framework is capable of identifying the correct values for the structural parameters $$b$$ and $$k$$ with remarkable accuracy. The learned values for the damping and stiffness parameters are $$b = 0.08438281$$ and $$k = 2.2015007$$. This corresponds to around $$0.45\%$$ and $$0.02\%$$ relative errors in the estimated values for $$b$$ and $$k$$, respectively.
+
+![](http://www.dam.brown.edu/people/mraissi/assets/img/displacement_lift.png)
+> _Vortex Induced Vibrations:_ Observations of the displacement are plotted in the left panel while the data on the lift force are depicted in the right panel. These observations are shown by the red circles. Predictions of the trained neural networks are depicted by blue solid lines.
+
+
 
 * * * * *
 
