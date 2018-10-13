@@ -1,8 +1,8 @@
 ---
 layout: default
 ---
-### Author
-[Maziar Raissi](http://www.dam.brown.edu/people/mraissi/)
+### Authors
+[Maziar Raissi](http://www.dam.brown.edu/people/mraissi/), [Zhicheng Wang](http://meche.mit.edu/people/staff/zhicheng@mit.edu), [Michael Triantafyllou](http://meche.mit.edu/people/faculty/MISTETRI@MIT.EDU), and [George Karniadakis](https://www.brown.edu/research/projects/crunch/george-karniadakis)
 
 ### Video
 [https://youtu.be/-Pu_ZTJsMyA](https://youtu.be/-Pu_ZTJsMyA)
