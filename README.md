@@ -5,7 +5,19 @@ Vortex induced vibrations of bluff bodies occur when the vortex shedding frequen
 For more information, please refer to the following: (https://maziarraissi.github.io/DeepVIV/)
 
   - Raissi, Maziar, Zhicheng Wang, Michael S. Triantafyllou, and George Em Karniadakis. "[Deep Learning of Vortex Induced Vibrations](https://arxiv.org/abs/1808.08952)." arXiv preprint arXiv:1808.08952 (2018).
-  
+
+## Dependencies
+
+  1. Download https://www.dropbox.com/s/gxeyasawxlj7nyu/Data.tar.gz?dl=0
+  2. Download https://www.dropbox.com/s/whegu3wugorumnj/Figures.tar.gz?dl=0
+  3. Download https://www.dropbox.com/s/wru84hu4s1g6d3c/Results.tar.gz?dl=0
+
+In the DeepVIV directory, execute
+
+  1. tar -xzf Data.tar.gz
+  2. tar -xzf Data.tar.gz
+  3. tar -xzf Data.tar.gz
+
 ## Citation
 
     @article{raissi2018deepVIV,
