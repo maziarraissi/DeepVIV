@@ -122,6 +122,9 @@ e_4 := c_t + u c_x + v c_y - Pe^{-1}(c_{xx} + c_{yy}).
 \end{array}
 $$
 
+![](http://www.dam.brown.edu/people/mraissi/assets/img/DeepVIV_3.png)
+> _Navier-Stokes informed neural networks:_ A plain vanilla densely connected (physics uninformed) neural network, with 10 hidden layers and 32 neurons per hidden layer per output variable (i.e., 5 x 32 = 160 neurons per hidden layer), takes the input variables t, x, y and outputs the displacement, c, u, v, w, and p. As for the activation functions, we use sin(x). For illustration purposes only, the network depicted in this figure comprises of 2 hidden layers and 6 neurons per hidden layers. We employ automatic differentiation to obtain the required derivatives to compute the residual (physics informed) networks. If a term does not appear in the blue boxes, its coefficient is assumed to be zero. It is worth emphasizing that unless the coefficient in front of a term is non-zero, that term is not going to appear in the actual "compiled" computational graph and is not going to contribute to the computational cost of a feed forward evaluation of the resulting network. The total loss function is composed of the regression loss of the passive scalar c and the displacement on the training data, and the loss imposed by the differential equations. Here, the differential operators are computed using automatic differentiation and can be thought of as "activation operators". Moreover, the gradients of the loss function are back-propagated through the entire network to train the neural networks parameters using the Adam optimizer.
+
 
 
 * * * * * *
