@@ -125,82 +125,26 @@ $$
 ![](http://www.dam.brown.edu/people/mraissi/assets/img/DeepVIV_3.png)
 > _Navier-Stokes informed neural networks:_ A plain vanilla densely connected (physics uninformed) neural network, with 10 hidden layers and 32 neurons per hidden layer per output variable (i.e., 5 x 32 = 160 neurons per hidden layer), takes the input variables t, x, y and outputs the displacement, c, u, v, w, and p. As for the activation functions, we use sin(x). For illustration purposes only, the network depicted in this figure comprises of 2 hidden layers and 6 neurons per hidden layers. We employ automatic differentiation to obtain the required derivatives to compute the residual (physics informed) networks. If a term does not appear in the blue boxes, its coefficient is assumed to be zero. It is worth emphasizing that unless the coefficient in front of a term is non-zero, that term is not going to appear in the actual "compiled" computational graph and is not going to contribute to the computational cost of a feed forward evaluation of the resulting network. The total loss function is composed of the regression loss of the passive scalar c and the displacement on the training data, and the loss imposed by the differential equations. Here, the differential operators are computed using automatic differentiation and can be thought of as "activation operators". Moreover, the gradients of the loss function are back-propagated through the entire network to train the neural networks parameters using the Adam optimizer.
 
+The residual networks $$e_1$$, $$e_2$$, and $$e_3$$ are defined as before. We use automatic differentiation to obtain the required derivatives to compute the additional residual network $$e_4$$. The shared parameters of the neural networks $$c$$, $$u$$, $$v$$, $$p$$, $$\eta$$, $$e_1$$, $$e_2$$, $$e_3$$, and $$e_4$$ can be learned by minimizing the sum of squared errors loss function
 
+$$
+\begin{array}{l}
+\sum_{n=1}^N \left(\vert c(t^n,x^n,y^n)-c^n \vert^2 + \vert \eta(t^n)-\eta^n \vert^2\right)\\
++ \sum_{m=1}^M \left( \vert u(t^m,x^m,y^m)-u^m \vert^2 + \vert v(t^m,x^m,y^m)-v^m \vert^2 \right)\\
++ \sum_{i=1}^4\sum_{n=1}^N \left( \vert e_i(t^n,x^n,y^n) \vert^2 \right).
+\end{array}
+$$
+
+Here, the first summation corresponds to the training data on the concentration of the passive scalar and the structure's displacement, the second summation corresponds to the Dirichlet boundary data on the velocity field, and the last summation enforces the dynamics imposed by Navier-Stokes equations and the equation corresponding to the passive scalar. Upon training, we use the lift and drag equations to obtain the required data on the lift force. Such data are then used to estimate the structural parameters $$b$$ and $$k$$ by minimizing the first loss function introduced in this document.
 
 * * * * * *
 #### Results
 
-The proposed framework provides a universal treatment of coupled forward-backward stochastic differential equations of  fundamentally  different  nature and their corresponding high-dimensional partial differential equations. This generality  will be demonstrated by applying the algorithm to a wide range of canonical problems spanning a number of scientific domains  including a 100-dimensional [Black-Scholes-Barenblatt](https://en.wikipedia.org/wiki/Black–Scholes_model) equation and a 100-dimensional [Hamilton-Jacobi-Bellman](https://en.wikipedia.org/wiki/Hamilton–Jacobi–Bellman_equation) equation. These  examples are motivated by the pioneering work of [Beck et. al.](https://arxiv.org/abs/1709.05963). All data and codes used in this manuscript will be publicly available on [GitHub](https://github.com/maziarraissi/FBSNNs).
+To generate a high-resolution dataset for the VIV problem we have performed direct numerical simulations (DNS) employing the high-order [spectral-element method](https://global.oup.com/academic/product/spectralhp-element-methods-for-computational-fluid-dynamics-9780198528692?cc=us&lang=en&), together with the coordinate transformation method to take account of the boundary deformation. The computational domain is $$[-6.5\,D,23.5\,D] \times [-10\,D,10 \, D]$$, consisting of 1,872 quadrilateral elements. The cylinder center was placed at $$(0, 0)$$. On the inflow, located at $$x/D=-6.5$$, we prescribe $$(u=U_{\infty},v=0)$$. On the outflow, where $$x/D=23.5$$, zero-pressure boundary condition $$(p=0)$$ is imposed. On both top and bottom boundaries where $$y/D=\pm 10$$, a periodic boundary condition is used. The Reynolds number is $$Re=100$$, $$\rho=2$$, $$b=0.084$$ and $$k=2.2020$$. For the case with dye, we assumed the Péclet number $$Pe=90$$. First, the simulation is carried out until $$t=1000 \, \frac{D}{U_{\infty}}$$ when the system is in steady periodic state. Then, an additional simulation for $$\Delta t=14 \,\frac{D}{U_{\infty}}$$ is performed to collect the data that are saved in 280 field snapshots. The time interval between two consecutive snapshots is $$\Delta t= 0.05 \frac{D}{U_{\infty}}$$. Note here $$D=1$$ is the diameter of the cylinder and $$U_{\infty}=1$$ is the inflow velocity. We use the DNS results to compute the lift and drag forces exerted by the fluid on the cylinder. All data and codes used in this manuscript will be publicly available on [GitHub](https://github.com/maziarraissi/DeepVIV).
 
-**Black-Scholes-Barenblatt Equation in 100D**
+**A Pedagogical Example**
 
-Let us start with the following forward-backward stochastic differential equations
-
-$$
-\begin{array}{l}
-dX_t = \sigma\text{diag}(X_t)dW_t, ~~~ t \in [0,T],\\
-X_0 = \xi,\\
-dY_t = r(Y_t - Z_t' X_t)dt + \sigma Z_t'\text{diag}(X_t)dW_t, ~~~ t \in [0,T),\\
-Y_T = g(X_T),
-\end{array}
-$$
-
-where $$T=1$$, $$\sigma = 0.4$$, $$r=0.05$$, $$\xi = (1,0.5,1,0.5,\ldots,1,0.5) \in \mathbb{R}^{100}$$, and $$g(x) = \Vert x \Vert ^2$$. The above equations are related to the Black-Scholes-Barenblatt equation
-
-$$
-u_t = -\frac{1}{2} \text{Tr}[\sigma^2 \text{diag}(X_t^2) D^2u] + r(u - (Du)' x),
-$$
-
-with terminal condition $$u(T,x) = g(x)$$. This equation admits the explicit solution
-
-$$
-u(t,x) = \exp \left( (r + \sigma^2) (T-t) \right)g(x),
-$$
-
-which can be used to test the accuracy of the proposed algorithm. We approximate the unknown solution $$u(t,x)$$ by a 5-layer deep neural network with $$256$$ neurons per hidden layer. Furthermore, we partition the time domain $$[0,T]$$ into $$N=50$$ equally spaced intervals. Upon minimizing the loss function, using the [Adam optimizer](https://arxiv.org/abs/1412.6980) with mini-batches of size $$100$$ (i.e., $$100$$ realizations of the underlying Brownian motion), we obtain the results reported in the following figure. In this figure, we are evaluating the learned solution $$Y_t = u(t,X_t)$$ at representative realizations (not seen during training) of the underlying high-dimensional process $$X_t$$. Unlike the state of the art [algorithms](https://arxiv.org/abs/1709.05963), which can only approximate $$Y_0 = u(0,X_0)$$ at time $$0$$ and at the initial spatial point $$X_0=\xi$$, our algorithm is capable of approximating the entire solution function $$u(t,x)$$ in a single round of training as demonstrated in the following figure.
-
-![](http://www.dam.brown.edu/people/mraissi/assets/img/BSB_Apr18_50.png)
-> _Black-Scholes-Barenblatt Equation in 100D:_ Evaluations of the learned solution at representative realizations of the underlying high-dimensional process. It should be highlighted that the state of the art algorithms can only approximate the solution at time 0 and at the initial spatial point.
-
-To further scrutinize the performance of our algorithm, in the following figure we report the mean and mean plus two standard deviations of the relative errors between model predictions and the exact solution computed based on $$100$$ independent realizations of the underlying Brownian motion. It is worth noting that in the previous figure we were plotting $$5$$ representative examples of the $$100$$ realizations used to generate the following figure. The results reported in these two figures are obtained after $$2 \times 10^4$$, $$3 \times 10^4$$, $$3 \times 10^4$$, and $$2 \times 10^4$$ consecutive iterations of the Adam optimizer with learning rates of $$10^{-3}$$, $$10^{-4}$$, $$10^{-5}$$, and $$10^{-6}$$, respectively. The total number of iterations is therefore given by $$10^5$$. Every $$10$$ iterations of the optimizer takes about $$0.88$$ seconds on a single NVIDIA Titan X GPU card. In each iteration of the Adam optimizer we are using $$100$$ different realizations of the underlying Brownian motion. Consequently, the total number of Brownian motion trajectories observed by the algorithm is given by $$10^7$$. It is worth highlighting that the algorithm converges to the exact value $$Y_0 = u(0,X_0)$$ in the first few hundred iterations of the Adam optimizer. For instance after only $$500$$ steps of training, the algorithms achieves an accuracy of around $$2.3 \times 10^{-3}$$ in terms of relative error. This is comparable to the results reported [here](https://arxiv.org/abs/1709.05963), both in terms of accuracy and the speed of the algorithm. However, to obtain more accurate estimates for $$Y_t = u(t,X_t)$$ at later times $$t>0$$ we need to train the algorithm using more iterations of the Adam optimizer.
-
-![](http://www.dam.brown.edu/people/mraissi/assets/img/BSB_Apr18_50_errors.png)
-> _Black-Scholes-Barenblatt Equation in 100D:_ Mean and mean plus two standard deviations of the relative errors between model predictions and the exact solution computed based on 100 realizations of the underlying Brownian motion.
-
-**Hamilton-Jacobi-Bellman Equation in 100D**
-
-Let us now consider the following forward-backward stochastic differential equations
-
-$$
-\begin{array}{l}
-dX_t = \sigma dW_t, ~~~ t \in [0,T],\\
-X_0 = \xi,\\
-dY_t = \Vert Z_t\Vert^2 dt + \sigma Z_t'dW_t, ~~~ t \in [0,T),\\
-Y_T = g(X_T),
-\end{array}
-$$
-
-where $$T=1$$, $$\sigma = \sqrt{2}$$, $$\xi = (0,0,\ldots,0)\in \mathbb{R}^{100}$$, and $$g(x) = \ln\left(0.5\left(1+\Vert x\Vert^2\right)\right)$$. The above equations are related to the Hamilton-Jacobi-Bellman equation
-
-$$
-u_t = -\text{Tr}[D^2u] + \Vert Du\Vert^2,
-$$
-
-with terminal condition $$u(T,x) = g(x)$$. This equation admits the explicit solution
-
-$$
-u(t,x) = -\ln\left(\mathbb{E}\left[\exp\left( -g(x + \sqrt{2} W_{T-t}) \right) \right] \right),
-$$
-
-which can be used to test the accuracy of the proposed algorithm. In fact, due to the presence of the expectation operator $$\mathbb{E}$$ in the above equation, we can only approximately compute the exact solution. To be precise, we use $$10^5$$ Monte-Carlo samples to approximate the exact solution and use the result as ground truth. We represent the unknown solution $$u(t,x)$$ by a $$5$$-layer deep neural network with $$256$$ neurons per hidden layer. Furthermore, we partition the time domain $$[0,T]$$ into $$N=50$$ equally spaced intervals. Upon minimizing the loss function, using the Adam optimizer with mini-batches of size $$100$$ (i.e., $$100$$ realizations of the underlying Brownian motion), we obtain the results reported in the following figure. In this figure, we are evaluating the learned solution $$Y_t = u(t,X_t)$$ at a representative realization (not seen during training) of the underlying high-dimensional process $$X_t$$. It is worth noting that computing the exact solution to this problem is prohibitively costly due to the need for the aforementioned Monte-Carlo sampling strategy. That is why we are depicting only a single realization of the solution trajectories in the following figure. Unlike the state of the art [algorithms](https://arxiv.org/abs/1709.05963), which can only approximate $$Y_0 = u(0,X_0)$$ at time $$0$$ and at the initial spatial point $$X_0=\xi$$, our algorithm is capable of approximating the entire solution function $$u(t,x)$$ in a single round of training as demonstrated in the following figure.
-
-![](http://www.dam.brown.edu/people/mraissi/assets/img/HJB_Apr18_50.png)
-> _Hamilton-Jacobi-Bellman Equation in 100D:_ Evaluation of the learned solution at a representative realization of the underlying high-dimensional process. It should be highlighted that the state of the art algorithms can only approximate the solution at time 0 and at the initial spatial point.
-
-To further investigate the performance of our algorithm, in the following figure we report the relative error between model prediction and the exact solution computed for the same realization of the underlying Brownian motion as the one used in the previous figure. The results reported in these two figures are obtained after $$2 \times 10^4$$, $$3 \times 10^4$$, $$3 \times 10^4$$, and $$2 \times 10^4$$ consecutive iterations of the Adam optimizer with learning rates of $$10^{-3}$$, $$10^{-4}$$, $$10^{-5}$$, and $$10^{-6}$$, respectively. The total number of iterations is therefore given by $$10^5$$. Every $$10$$ iterations of the optimizer takes about $$0.79$$ seconds on a single NVIDIA Titan X GPU card. In each iteration of the Adam optimizer we are using $$100$$ different realizations of the underlying Brownian motion. Consequently, the total number of Brownian motion trajectories observed by the algorithm is given by $$10^7$$. It is worth highlighting that the algorithm converges to the exact value $$Y_0 = u(0,X_0)$$ in the first few hundred iterations of the Adam optimizer. For instance after only $$100$$ steps of training, the algorithms achieves an accuracy of around $$7.3 \times 10^{-3}$$ in terms of relative error. This is comparable to the results reported [here](https://arxiv.org/abs/1709.05963), both in terms of accuracy and the speed of the algorithm. However, to obtain more accurate estimates for $$Y_t = u(t,X_t)$$ at later times $$t>0$$ we need to train the algorithm using more iterations of the Adam optimizer.
-
-![](http://www.dam.brown.edu/people/mraissi/assets/img/HJB_Apr18_50_errors.png)
-> _Hamilton-Jacobi-Bellman Equation in 100D:_ The relative error between model prediction and the exact solution computed based on a single realization of the underlying Brownian motion.
+To illustrate the effectiveness of our approach, let us start with the two time series depicted in the following figure consisting of $$N=111$$ observations of the displacement and the lift force. These data correspond to damping and stiffness parameters with exact values $$b=0.084$$ and $$k=2.2020$$, respectively. Here, the cylinder is assumed to have a mass of $$\rho = 2.0$$. This data-set is then used to train a 10-layer deep neural network with 32 neurons per hidden layers by minimizing the sum of squared errors loss function (the first loss function introduced in the current work) using the [Adam optimizer](https://arxiv.org/abs/1412.6980). Upon training, the network is used to predict the entire solution functions $$\eta(t)$$ and $$f_L(t)$$, as well as the unknown structural parameters $$b$$ and $$k$$. In addition to almost perfect reconstructions of the two time series for displacement and lift force, the proposed framework is capable of identifying the correct values for the structural parameters $$b$$ and $$k$$ with remarkable accuracy. The learned values for the damping and stiffness parameters are $$b = 0.08438281$$ and $$k = 2.2015007$$. This corresponds to around $$0.45\%$$ and $$0.02\%$$ relative errors in the estimated values for $$b$$ and $$k$$, respectively.
 
 * * * * *
 
