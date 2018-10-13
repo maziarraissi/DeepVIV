@@ -15,8 +15,8 @@ For more information, please refer to the following: (https://maziarraissi.githu
 In the DeepVIV directory, execute
 
   1. tar -xzf Data.tar.gz
-  2. tar -xzf Data.tar.gz
-  3. tar -xzf Data.tar.gz
+  2. tar -xzf Figures.tar.gz
+  3. tar -xzf Results.tar.gz
 
 ## Citation
 
